@@ -3,9 +3,11 @@ GAM531 Final Project Group 2
 
 ### TODO
 
-- [ ] Add lighting
-- [ ] Modify Y collision on cube objects to allow movement
-- [ ] Add .obj loader
-- [ ] Add character animations
-- [ ] Design enemies
-- [ ] Add grappling
+- [ ] edit model so it doesn't move forward
+- [ ] Change camera movement to mouse
+- [ ] Add side-stepping
+- [ ] Add wall collision
+- [ ] Add title screen
+- [ ] Add UI and Health + fall damage
+- [ ] Add game over screen
+- [ ] Texture player
