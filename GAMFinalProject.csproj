@@ -73,22 +73,25 @@
     <None Update="Asset\PlayerAnimations\Walking\6.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Asset\PlayerAnimations\Walking\Walking1.stl">
+    <None Update="Asset\PlayerAnimations\Running\1.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Asset\PlayerAnimations\Walking\Walking2.stl">
+    <None Update="Asset\PlayerAnimations\Running\2.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Asset\PlayerAnimations\Walking\Walking3.stl">
+    <None Update="Asset\PlayerAnimations\Running\3.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Asset\PlayerAnimations\Walking\Walking4.stl">
+    <None Update="Asset\PlayerAnimations\Running\4.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Asset\PlayerAnimations\Walking\Walking5.stl">
+    <None Update="Asset\PlayerAnimations\Running\5.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Asset\PlayerAnimations\Walking\Walking6.stl">
+    <None Update="Asset\PlayerAnimations\Running\6.stl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Asset\PlayerAnimations\Running\7.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Shader\fragment.glsl">

@@ -33,7 +33,6 @@ namespace GAMFinalProject
         public Vector3 EndPosition { get; set; }
         public float MoveSpeed { get; set; } = 1.0f;
         private float _moveProgress = 0f;
-        private bool _movingForward = true;
 
         public Matrix4 ModelMatrix { get; private set; } = Matrix4.Identity;
 
@@ -94,10 +93,9 @@ namespace GAMFinalProject
             ModelMatrix = scale * rotX * userRot * translation;
         }
 
-        // Get the exact top surface Y coordinate at a given XZ position
-        public float GetSurfaceY(float x, float z)
+        public float GetSurfaceY()
         {
-            float baseY = Position.Y + Height * 0.5f;
+            float baseY = Position.Y + Height * 0.7f;
 
             return baseY;
         }
@@ -121,8 +119,7 @@ namespace GAMFinalProject
             if (!IsWithinHorizontalBounds(playerPos.X, playerPos.Z, 0.05f))
                 return false;
 
-            // Get surface height at player position
-            surfaceY = GetSurfaceY(playerPos.X, playerPos.Z);
+            surfaceY = GetSurfaceY();
 
             // Check if player is close to the surface
             float playerBottom = playerPos.Y - playerRadius;
@@ -140,8 +137,7 @@ namespace GAMFinalProject
             if (!IsWithinHorizontalBounds(toPos.X, toPos.Z, 0f))
                 return false;
 
-            // Get platform top at the new position
-            float surfaceY = GetSurfaceY(toPos.X, toPos.Z);
+            float surfaceY = GetSurfaceY();
             float platformBottom = Position.Y - Height * 0.5f;
 
             // If player is moving upward (jumping), allow them to pass through

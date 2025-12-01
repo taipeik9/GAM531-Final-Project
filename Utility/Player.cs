@@ -12,7 +12,8 @@ namespace GAMFinalProject
         public Vector3 Scale { get; set; } = Vector3.One;
         public Vector3 Rotation { get; set; } = Vector3.Zero; // Euler angles in degrees
         private float _playerYaw = 180f;
-
+        // physics properites for movement
+        public bool IsSprinting { get; set; } = true;
         // Physics properties for jumping
         public Vector3 Velocity { get; set; } = Vector3.Zero;
         public bool IsGrounded { get; set; } = true;
@@ -21,7 +22,8 @@ namespace GAMFinalProject
         // physics constants
         private const float JumpForce = 7.5f;
         private const float Radius = 0.3f;
-        private const float Speed = 3.5f;
+        private const float WalkSpeed = 2.0f;
+        private const float SprintSpeed = 3.5f;
         private readonly float Gravity;
 
         public Player(AnimatedModel model, float gravity)
@@ -38,6 +40,16 @@ namespace GAMFinalProject
             bool isMoving = false;
             Vector3 moveDirection = Vector3.Zero;
 
+            // don't allow sprint start in air
+            if (!IsSprinting && !IsGrounded)
+            {
+                IsSprinting = false;
+            }
+            else
+            {
+                IsSprinting = input.IsKeyDown(Keys.LeftShift);
+            }
+
             float camYaw = camera.Yaw;
             float camPitch = camera.Pitch;
             var camForward = new Vector3(MathF.Sin(camYaw) * MathF.Cos(camPitch), 0f, -MathF.Cos(camYaw) * MathF.Cos(camPitch));
@@ -46,7 +58,7 @@ namespace GAMFinalProject
             var camRight = new Vector3(MathF.Cos(camYaw), 0f, MathF.Sin(camYaw));
             if (camRight.LengthSquared > 0.0001f) camRight = Vector3.Normalize(camRight);
 
-            // forward / backward based on camera
+            // determine movement direction
             if (input.IsKeyDown(Keys.W))
             {
                 moveDirection += camForward;
@@ -58,8 +70,6 @@ namespace GAMFinalProject
                 moveDirection -= camForward;
                 isMoving = true;
             }
-
-            // Left / right now move relative to the camera and also rotate the player to face that direction
             if (input.IsKeyDown(Keys.A))
             {
                 moveDirection -= camRight;
@@ -104,7 +114,7 @@ namespace GAMFinalProject
                 float desiredYawDeg = MathHelper.RadiansToDegrees(desiredYawRad);
                 _playerYaw = desiredYawDeg;
 
-                horizontalMovement = moveNorm * Speed * dt;
+                horizontalMovement = moveNorm * (IsSprinting ? SprintSpeed : WalkSpeed) * dt;
             }
 
             // B. Vertical Movement (Gravity/Jump)
@@ -162,7 +172,7 @@ namespace GAMFinalProject
                 // Land animation
                 if (_model.GetCurrentAnimationName() == "jumping" && _model.IsAnimationFinished())
                 {
-                    _model.PlayAnimation(isMoving ? "walking" : "idle");
+                    _model.PlayAnimation(isMoving ? IsSprinting ? "sprinting" : "walking" : "idle");
                 }
             }
             else
@@ -179,7 +189,7 @@ namespace GAMFinalProject
                     // Land animation
                     if (_model.GetCurrentAnimationName() == "jumping" && _model.IsAnimationFinished())
                     {
-                        _model.PlayAnimation(isMoving ? "walking" : "idle");
+                        _model.PlayAnimation(isMoving ? IsSprinting ? "sprinting" : "walking" : "idle");
                     }
                 }
                 else
@@ -192,13 +202,28 @@ namespace GAMFinalProject
             Position = intendedPosition;
 
             // --- 9. Animation State Update ---
+            // crazy stupid structure for animation
+            // don't even ask about it lmao
             if (IsGrounded && _model.GetCurrentAnimationName() != "jumping")
             {
-                if (isMoving && _model.GetCurrentAnimationName() != "walking")
+                if (isMoving)
                 {
-                    _model.PlayAnimation("walking");
+                    if (IsSprinting)
+                    {
+                        if (_model.GetCurrentAnimationName() != "sprinting")
+                        {
+                            _model.PlayAnimation("sprinting");
+                        }
+                    }
+                    else
+                    {
+                        if (_model.GetCurrentAnimationName() != "walking")
+                        {
+                            _model.PlayAnimation("walking");
+                        }
+                    }
                 }
-                else if (!isMoving && _model.GetCurrentAnimationName() == "walking")
+                else if (!isMoving && (_model.GetCurrentAnimationName() == "walking" || _model.GetCurrentAnimationName() == "sprinting"))
                 {
                     _model.PlayAnimation("idle");
                 }

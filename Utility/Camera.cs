@@ -29,11 +29,18 @@ namespace GAMFinalProject
 
             dir = Vector3.Normalize(dir);
 
-            Position = playerPos
+            Vector3 position = playerPos
                      - dir * Distance
                      + Vector3.UnitY;
 
-            ViewMatrix = Matrix4.LookAt(Position, playerPos, Vector3.UnitY);
+            // stop camera from ground clipping
+            if (position.Y <= 0.1f)
+            {
+                position.Y = 0.1f;
+            }
+
+            ViewMatrix = Matrix4.LookAt(position, playerPos, Vector3.UnitY);
+            Position = position;
 
             ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), AspectRatio, 0.1f, 100f);
         }

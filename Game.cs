@@ -111,6 +111,7 @@ namespace GAMFinalProject
             AnimatedModel playerModel = new AnimatedModel();
             playerModel.LoadAnimation("idle", "Asset/PlayerAnimations/Walking", 1, frameRate: 1f, loop: true);
             playerModel.LoadAnimation("walking", "Asset/PlayerAnimations/Walking", 6, frameRate: 12f, loop: true);
+            playerModel.LoadAnimation("sprinting", "Asset/PlayerAnimations/Running", 7, frameRate: 14f, loop: true);
             playerModel.LoadAnimation("jumping", "Asset/PlayerAnimations/Jumping", 7, frameRate: 14f, loop: false);
             playerModel.SetUvMode(0, new Vector2(1f, 1f));
             playerModel.PlayAnimation("idle");
