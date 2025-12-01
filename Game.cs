@@ -51,22 +51,15 @@ namespace GAMFinalProject
         private int _vertexArrayObject;
         private Shader _shader;
         private Camera _camera;
-        private double _time;
 
         private Texture _wall_texture;
         private Texture _player_texture;
         private Texture _platform_texture;
 
-        private AnimatedModel _player;
+        private Player _player;
         private PlatformManager _platformManager;
 
-        private const float PlayerSpeed = 3.5f;
-        private const float PlayerRotationSpeed = 300f;
         private const float Gravity = -18f;
-        private const float JumpForce = 7.5f;
-        private const float PlayerRadius = 0.3f;
-        private float _playerYaw = 180f;
-
         public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
             : base(gameWindowSettings, nativeWindowSettings)
         {
@@ -115,16 +108,18 @@ namespace GAMFinalProject
             _shader.SetInt("texture1", 1);
             _shader.SetInt("texture2", 2);
 
-            _player = new AnimatedModel();
-            _player.LoadAnimation("idle", "Asset/PlayerAnimations/Walking", 1, frameRate: 1f, loop: true);
-            _player.LoadAnimation("walking", "Asset/PlayerAnimations/Walking", 6, frameRate: 12f, loop: true);
-            _player.LoadAnimation("jumping", "Asset/PlayerAnimations/Jumping", 7, frameRate: 14f, loop: false);
-            _player.SetUvMode(0, new Vector2(1f, 1f));
+            AnimatedModel playerModel = new AnimatedModel();
+            playerModel.LoadAnimation("idle", "Asset/PlayerAnimations/Walking", 1, frameRate: 1f, loop: true);
+            playerModel.LoadAnimation("walking", "Asset/PlayerAnimations/Walking", 6, frameRate: 12f, loop: true);
+            playerModel.LoadAnimation("jumping", "Asset/PlayerAnimations/Jumping", 7, frameRate: 14f, loop: false);
+            playerModel.SetUvMode(0, new Vector2(1f, 1f));
+            playerModel.PlayAnimation("idle");
+
+            _player = new Player(playerModel, Gravity);
             _player.Position = new Vector3(0f, 0.0f, 4.0f);
             _player.Scale = new Vector3(2f, 2f, 2f);
-            _player.Rotation = new Vector3(-90f, _playerYaw, 0f);
+            _player.Rotation = new Vector3(-90f, _player.GetYaw(), 0f);
             _player.GroundLevel = 0.0f;
-            _player.PlayAnimation("idle");
 
             _platformManager = new PlatformManager();
             _platformManager.SetupParkourCourse();
@@ -133,7 +128,7 @@ namespace GAMFinalProject
             _camera.Distance = 1.0f;
             _camera.HeightOffset = 1.0f;
             _camera.TargetPosition = _player.Position;
-            _camera.PlayerYaw = _playerYaw;
+            _camera.PlayerYaw = _player.GetYaw();
 
             CursorState = CursorState.Normal;
         }
@@ -142,15 +137,13 @@ namespace GAMFinalProject
         {
             base.OnRenderFrame(e);
 
-            _time += 4.0 * e.Time;
-
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.BindVertexArray(_vertexArrayObject);
             _shader.Use();
 
             _camera.TargetPosition = _player.Position;
-            _camera.PlayerYaw = _playerYaw;
+            _camera.PlayerYaw = _player.GetYaw();
             _camera.UpdateThirdPerson();
 
             _shader.SetMatrix4("view", _camera.GetViewMatrix());
@@ -179,8 +172,6 @@ namespace GAMFinalProject
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-
-            _player.Update(e.Time);
             _platformManager.Update(e.Time);
 
             if (!IsFocused) return;
@@ -189,166 +180,7 @@ namespace GAMFinalProject
 
             if (input.IsKeyDown(Keys.Escape)) Close();
 
-            // --- 1. Rotation Logic ---
-            if (input.IsKeyDown(Keys.A))
-            {
-                _playerYaw += PlayerRotationSpeed * (float)e.Time;
-            }
-
-            if (input.IsKeyDown(Keys.D))
-            {
-                _playerYaw -= PlayerRotationSpeed * (float)e.Time;
-            }
-
-            // Normalize Yaw to 0-360
-            while (_playerYaw >= 360f) _playerYaw -= 360f;
-            while (_playerYaw < 0f) _playerYaw += 360f;
-
-            // --- 2. Input Calculation ---
-            bool isMoving = false;
-            Vector3 moveDirection = Vector3.Zero;
-
-            if (input.IsKeyDown(Keys.W))
-            {
-                float yawRad = _playerYaw * (MathF.PI / 180f);
-                moveDirection = new Vector3(MathF.Sin(yawRad), 0, MathF.Cos(yawRad));
-                isMoving = true;
-            }
-
-            if (input.IsKeyDown(Keys.S))
-            {
-                float yawRad = _playerYaw * (MathF.PI / 180f);
-                moveDirection = new Vector3(-MathF.Sin(yawRad), 0, -MathF.Cos(yawRad));
-                isMoving = true;
-            }
-
-            // --- 3. Jump Logic ---
-            if (input.IsKeyPressed(Keys.Space) && _player.IsGrounded)
-            {
-                // Keep existing horizontal velocity (momentum), add vertical force
-                _player.Velocity = new Vector3(_player.Velocity.X, JumpForce, _player.Velocity.Z);
-                _player.IsGrounded = false;
-                _player.PlayAnimation("jumping", restart: true);
-            }
-
-            // --- 4. Physics & Gravity ---
-            if (!_player.IsGrounded)
-            {
-                _player.Velocity = new Vector3(
-                    _player.Velocity.X,
-                    _player.Velocity.Y + Gravity * (float)e.Time,
-                    _player.Velocity.Z
-                );
-            }
-
-            // --- 5. Movement Calculation ---
-
-            // A. Player Input Movement (Walking)
-            Vector3 horizontalMovement = Vector3.Zero;
-            if (isMoving && moveDirection.LengthSquared > 0.01f)
-            {
-                horizontalMovement = moveDirection.Normalized() * PlayerSpeed * (float)e.Time;
-            }
-
-            // B. Vertical Movement (Gravity/Jump)
-            Vector3 verticalMovement = new Vector3(0, _player.Velocity.Y * (float)e.Time, 0);
-
-            // C. Moving Platform Locking (Kinematic)
-            // Check if we are currently standing on a platform *before* we move
-            var (wasOnPlatform, _, _, currentPlatformDelta) =
-                _platformManager.CheckPlayerOnPlatform(_player.Position, PlayerRadius);
-
-            Vector3 platformMovement = Vector3.Zero;
-
-            // If grounded on a platform, we stick to it (move exactly as much as it moved)
-            if (wasOnPlatform && _player.IsGrounded)
-            {
-                platformMovement = currentPlatformDelta;
-            }
-            // If in the air, we use Momentum (Velocity) instead
-            else if (!_player.IsGrounded)
-            {
-                platformMovement = new Vector3(_player.Velocity.X, 0, _player.Velocity.Z) * (float)e.Time;
-            }
-
-            // Combine all movements
-            Vector3 intendedPosition = _player.Position + horizontalMovement + verticalMovement + platformMovement;
-
-
-            // --- 6. Wall Collision ---
-            // We only check wall collision if we are grounded or falling (allows jumping up through platforms)
-            if (_player.IsGrounded || _player.Velocity.Y <= 0)
-            {
-                if (_platformManager.CheckWallCollision(_player.Position, intendedPosition, PlayerRadius))
-                {
-                    // Collision detected! 
-                    // Cancel horizontal input, but keep vertical and platform movement so we don't get stuck
-                    intendedPosition = _player.Position + verticalMovement + platformMovement;
-                }
-            }
-
-            // --- 7. Landing / Ground Check ---
-
-            // Check if the NEW position lands on a platform
-            var (isOnPlatform, platformSurfaceY, platformVelocity, _) =
-                _platformManager.CheckPlayerOnPlatform(intendedPosition, PlayerRadius);
-
-            if (isOnPlatform && _player.Velocity.Y <= 0) // Only land if falling or flat
-            {
-                // Snap to platform surface
-                intendedPosition = new Vector3(intendedPosition.X, platformSurfaceY + PlayerRadius, intendedPosition.Z);
-                _player.IsGrounded = true;
-
-                // Transfer platform velocity to player (so momentum works if we jump off next frame)
-                _player.Velocity = new Vector3(platformVelocity.X, 0, platformVelocity.Z);
-
-                // Land animation
-                if (_player.GetCurrentAnimationName() == "jumping" && _player.IsAnimationFinished())
-                {
-                    _player.PlayAnimation(isMoving ? "walking" : "idle");
-                }
-            }
-            else
-            {
-                // Fallback: Check static floor (GroundLevel)
-                if (intendedPosition.Y <= _player.GroundLevel)
-                {
-                    intendedPosition = new Vector3(intendedPosition.X, _player.GroundLevel, intendedPosition.Z);
-                    _player.IsGrounded = true;
-
-                    // Friction: Stop sliding when hitting static ground
-                    _player.Velocity = Vector3.Zero;
-
-                    // Land animation
-                    if (_player.GetCurrentAnimationName() == "jumping" && _player.IsAnimationFinished())
-                    {
-                        _player.PlayAnimation(isMoving ? "walking" : "idle");
-                    }
-                }
-                else
-                {
-                    _player.IsGrounded = false;
-                }
-            }
-
-            // --- 8. Final Apply ---
-            _player.Position = intendedPosition;
-
-            // --- 9. Animation State Update ---
-            if (_player.IsGrounded && _player.GetCurrentAnimationName() != "jumping")
-            {
-                if (isMoving && _player.GetCurrentAnimationName() != "walking")
-                {
-                    _player.PlayAnimation("walking");
-                }
-                else if (!isMoving && _player.GetCurrentAnimationName() == "walking")
-                {
-                    _player.PlayAnimation("idle");
-                }
-            }
-
-            // Apply Rotation
-            _player.Rotation = new Vector3(-90f, _playerYaw, 0f);
+            _player.Update((float)e.Time, input, _platformManager);
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)

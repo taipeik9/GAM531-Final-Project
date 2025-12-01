@@ -15,7 +15,7 @@ void main()
     vec3 baseColor = texture(texture0, TexCoord).rgb;
     if (texToUse == 1)
     {
- baseColor = texture(texture1, TexCoord).rgb;
+        baseColor = texture(texture1, TexCoord).rgb;
     }
     FragColor = vec4(baseColor, 1.0);
 }

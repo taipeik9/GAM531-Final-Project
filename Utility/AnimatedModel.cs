@@ -27,16 +27,6 @@ namespace GAMFinalProject
         private int _currentFrameIndex = 0;
         private double _frameTimer = 0;
 
-        public Matrix4 ModelMatrix { get; set; } = Matrix4.Identity;
-        public Vector3 Position { get; set; } = Vector3.Zero;
-        public Vector3 Scale { get; set; } = Vector3.One;
-        public Vector3 Rotation { get; set; } = Vector3.Zero; // Euler angles in degrees
-
-        // Physics properties for jumping
-        public Vector3 Velocity { get; set; } = Vector3.Zero;
-        public bool IsGrounded { get; set; } = true;
-        public float GroundLevel { get; set; } = 0.5f;
-
         public AnimatedModel()
         {
         }
@@ -78,7 +68,7 @@ namespace GAMFinalProject
         }
 
         // Update the animation (call this every frame)
-        public void Update(double deltaTime)
+        public void Update(float deltaTime)
         {
             if (_currentAnimation == null || _currentAnimation.Frames.Count == 0)
                 return;
@@ -129,30 +119,13 @@ namespace GAMFinalProject
         }
 
         // Draw the current frame
-        public void Draw(Shader shader)
+        public void Draw()
         {
             if (_currentAnimation == null || _currentAnimation.Frames.Count == 0)
                 return;
 
             var currentFrame = _currentAnimation.Frames[_currentFrameIndex];
 
-            // Build transformation matrix: Scale -> Rotate -> Translate
-            var scaleMatrix = Matrix4.CreateScale(Scale);
-
-            // Apply rotations in order: X (pitch), Y (yaw), Z (roll)
-            var rotationMatrix = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(Rotation.X)) *
-                                Matrix4.CreateRotationY(MathHelper.DegreesToRadians(Rotation.Y)) *
-                                Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(Rotation.Z));
-
-            var translationMatrix = Matrix4.CreateTranslation(Position);
-
-            // Original order: scale then rotate then translate (as in the user's initial code)
-            ModelMatrix = scaleMatrix * rotationMatrix * translationMatrix;
-
-            // Set the model matrix in the shader
-            shader.SetMatrix4("model", ModelMatrix);
-
-            // Draw the current frame
             currentFrame.Draw();
         }
 
