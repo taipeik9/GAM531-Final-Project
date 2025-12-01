@@ -3,7 +3,7 @@ GAM531 Final Project Group 2
 
 ### TODO
 
-- [ ] edit model so it doesn't move forward
+- [x] edit model so it doesn't move forward
 - [ ] Change camera movement to mouse
 - [ ] Add side-stepping
 - [ ] Add wall collision
