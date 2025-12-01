@@ -8,6 +8,7 @@ out vec4 FragColor;
 
 uniform sampler2D texture0;
 uniform sampler2D texture1;
+uniform sampler2D texture2;
 uniform int texToUse = 0; // 0 = wall, 1 = player
 
 void main()
@@ -16,6 +17,9 @@ void main()
     if (texToUse == 1)
     {
         baseColor = texture(texture1, TexCoord).rgb;
+    }
+    else if (texToUse == 2) {
+        baseColor = texture(texture2, TexCoord).rgb;
     }
     FragColor = vec4(baseColor, 1.0);
 }

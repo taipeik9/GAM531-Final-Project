@@ -6,7 +6,7 @@ namespace GAMFinalProject
 {
     class Player
     {
-        private AnimatedModel _model;
+        private readonly AnimatedModel _model;
         private Matrix4 _modelMatrix;
         public Vector3 Position { get; set; } = Vector3.Zero;
         public Vector3 Scale { get; set; } = Vector3.One;
@@ -20,9 +20,8 @@ namespace GAMFinalProject
 
         // physics constants
         private const float JumpForce = 7.5f;
-        private const float PlayerRadius = 0.3f;
-        private const float PlayerSpeed = 3.5f;
-        private const float PlayerRotationSpeed = 300f;
+        private const float Radius = 0.3f;
+        private const float Speed = 3.5f;
         private readonly float Gravity;
 
         public Player(AnimatedModel model, float gravity)
@@ -31,44 +30,49 @@ namespace GAMFinalProject
             Gravity = gravity;
         }
 
-        public void Update(float dt, KeyboardState input, PlatformManager platformManager)
+        public void Update(float dt, KeyboardState input, PlatformManager platformManager, Camera camera)
         {
             _model.Update(dt);
 
-            // --- 1. Rotation Logic ---
-            if (input.IsKeyDown(Keys.A))
-            {
-                _playerYaw += PlayerRotationSpeed * dt;
-            }
-
-            if (input.IsKeyDown(Keys.D))
-            {
-                _playerYaw -= PlayerRotationSpeed * dt;
-            }
-
-            // Normalize Yaw to 0-360
-            while (_playerYaw >= 360f) _playerYaw -= 360f;
-            while (_playerYaw < 0f) _playerYaw += 360f;
-
-            // --- 2. Input Calculation ---
+            // input Calculation (camera-relative)
             bool isMoving = false;
             Vector3 moveDirection = Vector3.Zero;
 
+            float camYaw = camera.Yaw;
+            float camPitch = camera.Pitch;
+            var camForward = new Vector3(MathF.Sin(camYaw) * MathF.Cos(camPitch), 0f, -MathF.Cos(camYaw) * MathF.Cos(camPitch));
+            if (camForward.LengthSquared > 0.0001f) camForward = Vector3.Normalize(camForward);
+
+            var camRight = new Vector3(MathF.Cos(camYaw), 0f, MathF.Sin(camYaw));
+            if (camRight.LengthSquared > 0.0001f) camRight = Vector3.Normalize(camRight);
+
+            // forward / backward based on camera
             if (input.IsKeyDown(Keys.W))
             {
-                float yawRad = _playerYaw * (MathF.PI / 180f);
-                moveDirection = new Vector3(MathF.Sin(yawRad), 0, MathF.Cos(yawRad));
+                moveDirection += camForward;
                 isMoving = true;
             }
 
             if (input.IsKeyDown(Keys.S))
             {
-                float yawRad = _playerYaw * (MathF.PI / 180f);
-                moveDirection = new Vector3(-MathF.Sin(yawRad), 0, -MathF.Cos(yawRad));
+                moveDirection -= camForward;
                 isMoving = true;
             }
 
-            // --- 3. Jump Logic ---
+            // Left / right now move relative to the camera and also rotate the player to face that direction
+            if (input.IsKeyDown(Keys.A))
+            {
+                moveDirection -= camRight;
+                isMoving = true;
+            }
+
+            if (input.IsKeyDown(Keys.D))
+            {
+                moveDirection += camRight;
+                isMoving = true;
+            }
+
+            // Jump Logic
             if (input.IsKeyPressed(Keys.Space) && IsGrounded)
             {
                 // Keep existing horizontal velocity (momentum), add vertical force
@@ -77,7 +81,7 @@ namespace GAMFinalProject
                 _model.PlayAnimation("jumping", restart: true);
             }
 
-            // --- 4. Physics & Gravity ---
+            // Physics & Gravity
             if (!IsGrounded)
             {
                 Velocity = new Vector3(
@@ -87,13 +91,20 @@ namespace GAMFinalProject
                 );
             }
 
-            // --- 5. Movement Calculation ---
+            // Movement Calculation
 
             // A. Player Input Movement (Walking)
             Vector3 horizontalMovement = Vector3.Zero;
-            if (isMoving && moveDirection.LengthSquared > 0.01f)
+            if (isMoving && moveDirection.LengthSquared > 0.0001f)
             {
-                horizontalMovement = moveDirection.Normalized() * PlayerSpeed * dt;
+                var moveNorm = moveDirection.Normalized();
+
+                // Rotate player to face movement direction (immediately)
+                float desiredYawRad = MathF.Atan2(moveNorm.X, moveNorm.Z); // matches player's sin/cos convention
+                float desiredYawDeg = MathHelper.RadiansToDegrees(desiredYawRad);
+                _playerYaw = desiredYawDeg;
+
+                horizontalMovement = moveNorm * Speed * dt;
             }
 
             // B. Vertical Movement (Gravity/Jump)
@@ -102,7 +113,7 @@ namespace GAMFinalProject
             // C. Moving Platform Locking (Kinematic)
             // Check if we are currently standing on a platform *before* we move
             var (wasOnPlatform, _, _, currentPlatformDelta) =
-                platformManager.CheckPlayerOnPlatform(Position, PlayerRadius);
+                platformManager.CheckPlayerOnPlatform(Position, Radius);
 
             Vector3 platformMovement = Vector3.Zero;
 
@@ -125,7 +136,7 @@ namespace GAMFinalProject
             // We only check wall collision if we are grounded or falling (allows jumping up through platforms)
             if (IsGrounded || Velocity.Y <= 0)
             {
-                if (platformManager.CheckWallCollision(Position, intendedPosition, PlayerRadius))
+                if (platformManager.CheckWallCollision(Position, intendedPosition, Radius))
                 {
                     // Collision detected! 
                     // Cancel horizontal input, but keep vertical and platform movement so we don't get stuck
@@ -137,12 +148,12 @@ namespace GAMFinalProject
 
             // Check if the NEW position lands on a platform
             var (isOnPlatform, platformSurfaceY, platformVelocity, _) =
-                platformManager.CheckPlayerOnPlatform(intendedPosition, PlayerRadius);
+                platformManager.CheckPlayerOnPlatform(intendedPosition, Radius);
 
             if (isOnPlatform && Velocity.Y <= 0) // Only land if falling or flat
             {
                 // Snap to platform surface
-                intendedPosition = new Vector3(intendedPosition.X, platformSurfaceY + PlayerRadius, intendedPosition.Z);
+                intendedPosition = new Vector3(intendedPosition.X, platformSurfaceY + Radius, intendedPosition.Z);
                 IsGrounded = true;
 
                 // Transfer platform velocity to player (so momentum works if we jump off next frame)

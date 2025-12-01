@@ -124,13 +124,9 @@ namespace GAMFinalProject
             _platformManager = new PlatformManager();
             _platformManager.SetupParkourCourse();
 
-            _camera = new Camera(new Vector3(0.0f, 0.5f, 4.5f), Size.X / (float)Size.Y);
-            _camera.Distance = 1.0f;
-            _camera.HeightOffset = 1.0f;
-            _camera.TargetPosition = _player.Position;
-            _camera.PlayerYaw = _player.GetYaw();
-
-            CursorState = CursorState.Normal;
+            _camera = new Camera(3f, Size.X / (float)Size.Y);
+            // Capture the cursor so mouse movement controls the camera
+            CursorState = CursorState.Grabbed;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -142,12 +138,10 @@ namespace GAMFinalProject
             GL.BindVertexArray(_vertexArrayObject);
             _shader.Use();
 
-            _camera.TargetPosition = _player.Position;
-            _camera.PlayerYaw = _player.GetYaw();
-            _camera.UpdateThirdPerson();
+            _camera.Update(new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
 
-            _shader.SetMatrix4("view", _camera.GetViewMatrix());
-            _shader.SetMatrix4("projection", _camera.GetProjectionMatrix());
+            _shader.SetMatrix4("view", _camera.ViewMatrix);
+            _shader.SetMatrix4("projection", _camera.ProjectionMatrix);
 
             // Draw walls
             _wall_texture.Use(TextureUnit.Texture0);
@@ -180,13 +174,41 @@ namespace GAMFinalProject
 
             if (input.IsKeyDown(Keys.Escape)) Close();
 
-            _player.Update((float)e.Time, input, _platformManager);
+            _player.Update((float)e.Time, input, _platformManager, _camera);
+
+            float mouseDX = MouseState.Delta.X;
+            float mouseDY = MouseState.Delta.Y;
+
+            float sensitivity = 0.01f;
+
+            _camera.Yaw += mouseDX * sensitivity;
+            _camera.Pitch -= mouseDY * sensitivity;
+
+            _camera.Pitch = Math.Clamp(_camera.Pitch, -1.2f, 0.7f);
+
+            _camera.Update(_player.Position);
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             base.OnMouseWheel(e);
             _camera.Distance = Math.Clamp(_camera.Distance - e.OffsetY * 0.5f, 2f, 10f);
+        }
+
+        protected override void OnMouseMove(MouseMoveEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            float sensitivity = 0.01f;
+
+            float mouseDX = MouseState.Delta.X;
+            float mouseDY = MouseState.Delta.Y;
+
+
+            _camera.Yaw += mouseDX * sensitivity;
+            _camera.Pitch -= mouseDY * sensitivity;
+
+            _camera.Pitch = Math.Clamp(_camera.Pitch, -1.2f, 0.7f);
         }
 
         protected override void OnResize(ResizeEventArgs e)
