@@ -1,5 +1,4 @@
-﻿using GAMFinalProject.Utility;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 
 namespace GAMFinalProject
 {

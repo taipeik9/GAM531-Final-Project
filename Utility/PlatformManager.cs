@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace GAMFinalProject.Utility
+namespace GAMFinalProject
 {
     public class PlatformManager : IDisposable
     {
@@ -83,7 +83,7 @@ namespace GAMFinalProject.Utility
                 speed: 0.1f
             );
 
-            //// Final goal platforms
+            // Final goal platforms
             AddStaticPlatform(
                 position: new Vector3(-5.0f, 4.0f, -2.5f),
                 width: 0.55f, height: 0.2f, depth: 0.55f

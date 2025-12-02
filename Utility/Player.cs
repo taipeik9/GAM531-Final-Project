@@ -1,4 +1,3 @@
-using GAMFinalProject.Utility;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -21,7 +20,7 @@ namespace GAMFinalProject
 
         // physics constants
         private const float JumpForce = 7.5f;
-        private const float Radius = 0.3f;
+        private const float Radius = 0.35f;
         private const float WalkSpeed = 2.0f;
         private const float SprintSpeed = 3.5f;
         private readonly float Gravity;
@@ -32,7 +31,7 @@ namespace GAMFinalProject
             Gravity = gravity;
         }
 
-        public void Update(float dt, KeyboardState input, PlatformManager platformManager, Camera camera)
+        public void Update(float dt, KeyboardState input, PlatformManager platformManager, Camera camera, Room room)
         {
             _model.Update(dt);
 
@@ -146,11 +145,16 @@ namespace GAMFinalProject
             // We only check wall collision if we are grounded or falling (allows jumping up through platforms)
             if (IsGrounded || Velocity.Y <= 0)
             {
-                if (platformManager.CheckWallCollision(Position, intendedPosition, Radius))
+                bool blockedByPlatform = platformManager.CheckWallCollision(Position, intendedPosition, Radius);
+
+                if (blockedByPlatform)
                 {
-                    // Collision detected! 
-                    // Cancel horizontal input, but keep vertical and platform movement so we don't get stuck
                     intendedPosition = Position + verticalMovement + platformMovement;
+                }
+                else if (room != null)
+                {
+                    var constrained = room.ConstrainMovement(Position, intendedPosition, Radius);
+                    intendedPosition = constrained;
                 }
             }
 

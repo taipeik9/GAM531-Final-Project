@@ -1,4 +1,3 @@
-using GAMFinalProject.Utility;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -9,55 +8,14 @@ namespace GAMFinalProject
 {
     internal class Game : GameWindow
     {
-        private readonly float[] _vertices =
-        {
-            -7.0f, 0.0f,  6.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
-             1.0f, 0.0f,  6.0f,  0.0f, 1.0f, 0.0f,  2.0f, 0.0f,
-             1.0f, 0.0f, -3.0f,  0.0f, 1.0f, 0.0f,  2.0f, 2.0f,
-            -7.0f, 0.0f, -3.0f,  0.0f, 1.0f, 0.0f,  0.0f, 2.0f,
-
-            -7.0f, 0.0f,  6.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-            -7.0f, 0.0f, -3.0f,  1.0f, 0.0f, 0.0f,  2.0f, 0.0f,
-            -7.0f, 1.0f, -3.0f,  1.0f, 0.0f, 0.0f,  2.0f, 1.0f,
-            -7.0f, 1.0f,  6.0f,  1.0f, 0.0f, 0.0f,  0.0f, 1.0f,
-
-             1.0f, 0.0f,  6.0f, -1.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-             1.0f, 1.0f,  6.0f, -1.0f, 0.0f, 0.0f,  0.0f, 1.0f,
-             1.0f, 1.0f, -3.0f, -1.0f, 0.0f, 0.0f,  2.0f, 1.0f,
-             1.0f, 0.0f, -3.0f, -1.0f, 0.0f, 0.0f,  2.0f, 0.0f,
-
-            -7.0f, 0.0f,  6.0f,  0.0f, 0.0f, -1.0f,  0.0f, 0.0f,
-            -7.0f, 1.0f,  6.0f,  0.0f, 0.0f, -1.0f,  0.0f, 1.0f,
-             1.0f, 1.0f,  6.0f,  0.0f, 0.0f, -1.0f,  2.0f, 1.0f,
-             1.0f, 0.0f,  6.0f,  0.0f, 0.0f, -1.0f,  2.0f, 0.0f,
-
-             1.0f, 0.0f, -3.0f,  0.0f, 0.0f,  1.0f,  0.0f, 0.0f,
-             1.0f, 1.0f, -3.0f,  0.0f, 0.0f,  1.0f,  0.0f, 1.0f,
-            -7.0f, 1.0f, -3.0f,  0.0f, 0.0f,  1.0f,  2.0f, 1.0f,
-            -7.0f, 0.0f, -3.0f,  0.0f, 0.0f,  1.0f,  2.0f, 0.0f,
-        };
-
-        private readonly uint[] _indices =
-        {
-            0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4,
-            8, 9, 10, 10, 11, 8,
-            12, 13, 14, 14, 15, 12,
-            16, 17, 18, 18, 19, 16,
-        };
-
-        private int _elementBufferObject;
-        private int _vertexBufferObject;
-        private int _vertexArrayObject;
         private Shader _shader;
         private Camera _camera;
-
         private Texture _wall_texture;
         private Texture _player_texture;
         private Texture _platform_texture;
-
         private Player _player;
         private PlatformManager _platformManager;
+        private readonly Room _room = new Room();
 
         private const float Gravity = -18f;
         public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
@@ -74,42 +32,21 @@ namespace GAMFinalProject
             GL.DepthFunc(DepthFunction.Less);
             GL.Disable(EnableCap.CullFace);
 
-            _vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(_vertexArrayObject);
-
-            _vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
-
-            _elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
-
             _shader = new Shader("Shader/vertex.glsl", "Shader/fragment.glsl");
             _shader.Use();
 
-            var vertexLocation = _shader.GetAttribLocation("aPosition");
-            GL.EnableVertexAttribArray(vertexLocation);
-            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-
-            var normalLocation = _shader.GetAttribLocation("aNormal");
-            GL.EnableVertexAttribArray(normalLocation);
-            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-
-            var texCoordLocation = _shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
-
-            _wall_texture = Texture.LoadFromFile("Asset/brick-wall.jpg");
-            _player_texture = Texture.LoadFromFile("Asset/player.jpeg");
-            _platform_texture = Texture.LoadFromFile("Asset/brick-wall.jpg");
+            _wall_texture = Texture.LoadFromFile("Asset/painted-concrete.jpg");
+            _player_texture = Texture.LoadFromFile("Asset/concrete.jpg");
+            _platform_texture = Texture.LoadFromFile("Asset/concrete-dark.jpg");
 
             _shader.SetInt("texture0", 0);
             _shader.SetInt("texture1", 1);
             _shader.SetInt("texture2", 2);
 
+            _room.Load();
+
             AnimatedModel playerModel = new AnimatedModel();
-            playerModel.LoadAnimation("idle", "Asset/PlayerAnimations/Walking", 1, frameRate: 1f, loop: true);
+            playerModel.LoadAnimation("idle", "Asset/PlayerAnimations/Idle", 15, frameRate: 10f, loop: true);
             playerModel.LoadAnimation("walking", "Asset/PlayerAnimations/Walking", 6, frameRate: 12f, loop: true);
             playerModel.LoadAnimation("sprinting", "Asset/PlayerAnimations/Running", 7, frameRate: 14f, loop: true);
             playerModel.LoadAnimation("jumping", "Asset/PlayerAnimations/Jumping", 7, frameRate: 14f, loop: false);
@@ -126,7 +63,7 @@ namespace GAMFinalProject
             _platformManager.SetupParkourCourse();
 
             _camera = new Camera(3f, Size.X / (float)Size.Y);
-            // Capture the cursor so mouse movement controls the camera
+
             CursorState = CursorState.Grabbed;
         }
 
@@ -136,20 +73,26 @@ namespace GAMFinalProject
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.BindVertexArray(_vertexArrayObject);
             _shader.Use();
 
             _camera.Update(new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
 
+            _camera.ConstrainToRoom(_room, 0.25f, new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
+
             _shader.SetMatrix4("view", _camera.ViewMatrix);
             _shader.SetMatrix4("projection", _camera.ProjectionMatrix);
 
-            // Draw walls
+            _shader.SetVector3("lightPos", new Vector3(0f, 7f, 0f));
+            _shader.SetVector3("lightColor", new Vector3(1f, 1f, 1f));
+            _shader.SetVector3("viewPos", _camera.Position);
+            _shader.SetFloat("shininess", 32f);
+            _shader.SetFloat("ambientStrength", 0.2f);
+            _shader.SetFloat("specularStrength", 0.5f);
+
+            // Draw room
             _wall_texture.Use(TextureUnit.Texture0);
             _shader.SetInt("texToUse", 0);
-            var model = Matrix4.Identity;
-            _shader.SetMatrix4("model", model);
-            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
+            _room.Draw(_shader);
 
             // Draw platforms
             _platform_texture.Use(TextureUnit.Texture2);
@@ -175,7 +118,7 @@ namespace GAMFinalProject
 
             if (input.IsKeyDown(Keys.Escape)) Close();
 
-            _player.Update((float)e.Time, input, _platformManager, _camera);
+            _player.Update((float)e.Time, input, _platformManager, _camera, _room);
 
             float mouseDX = MouseState.Delta.X;
             float mouseDY = MouseState.Delta.Y;
@@ -188,6 +131,7 @@ namespace GAMFinalProject
             _camera.Pitch = Math.Clamp(_camera.Pitch, -1.2f, 0.7f);
 
             _camera.Update(_player.Position);
+            _camera.ConstrainToRoom(_room, 0.25f, _player.Position);
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
@@ -223,13 +167,11 @@ namespace GAMFinalProject
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            GL.DeleteBuffer(_vertexBufferObject);
-            GL.DeleteBuffer(_elementBufferObject);
             GL.BindVertexArray(0);
-            GL.DeleteVertexArray(_vertexArrayObject);
             _shader.Unload();
             _player?.Dispose();
             _platformManager?.Dispose();
+            _room?.Dispose();
             base.OnUnload();
         }
     }

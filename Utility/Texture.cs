@@ -2,7 +2,7 @@
 using PixelFormat = OpenTK.Graphics.OpenGL4.PixelFormat;
 using StbImageSharp;
 
-namespace GAMFinalProject.Utility
+namespace GAMFinalProject
 {
     public class Texture
     {

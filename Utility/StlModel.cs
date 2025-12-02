@@ -2,7 +2,7 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace GAMFinalProject.Utility
+namespace GAMFinalProject
 {
     // Simple STL (binary or ASCII) model loader for OpenTK.
     // Provides a VAO/VBO with layout: position(3), normal(3), texCoord(2)

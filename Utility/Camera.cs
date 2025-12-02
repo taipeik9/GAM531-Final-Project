@@ -1,5 +1,4 @@
 ﻿using OpenTK.Mathematics;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace GAMFinalProject
 {
@@ -43,6 +42,17 @@ namespace GAMFinalProject
             Position = position;
 
             ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), AspectRatio, 0.1f, 100f);
+        }
+        public void ConstrainToRoom(Room room, float cameraRadius, Vector3 targetPosition)
+        {
+            if (room == null) return;
+
+            var constrained = room.ConstrainCamera(Position, cameraRadius);
+            if (constrained != Position)
+            {
+                Position = constrained;
+                ViewMatrix = Matrix4.LookAt(Position, targetPosition, Vector3.UnitY);
+            }
         }
     }
 }

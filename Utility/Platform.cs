@@ -1,4 +1,3 @@
-using GAMFinalProject.Utility;
 using OpenTK.Mathematics;
 
 namespace GAMFinalProject
@@ -95,7 +94,7 @@ namespace GAMFinalProject
 
         public float GetSurfaceY()
         {
-            float baseY = Position.Y + Height * 0.7f;
+            float baseY = Position.Y + Height * 0.5f;
 
             return baseY;
         }
@@ -133,6 +132,11 @@ namespace GAMFinalProject
         // Check if movement would collide with platform sides (wall collision)
         public bool BlocksMovement(Vector3 fromPos, Vector3 toPos, float playerRadius)
         {
+            float fromFeet = fromPos.Y - playerRadius;
+            float toFeet = toPos.Y - playerRadius;
+            if (fromFeet >= Position.Y - 0.001f && toFeet >= Position.Y - 0.001f)
+                return false;
+
             // Use NO margin for wall collision - only block if actually inside the platform
             if (!IsWithinHorizontalBounds(toPos.X, toPos.Z, 0f))
                 return false;

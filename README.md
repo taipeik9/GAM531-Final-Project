@@ -8,10 +8,24 @@ GAM531 Final Project Group 2
 - [x] Add side-stepping
   - [x] add sprinting
   - [x] prevent camera ground collision
-  - [ ] extend walls
-  - [ ] prevent camera wall collision?
-- [ ] Add wall collision
-- [ ] Add title screen
+  - [x] extend walls
+  - [x] prevent camera wall collision?
+- [x] Add wall collision
+- [x] Add lighting
+- [x] Texture player
 - [ ] Add UI and Health + fall damage
+- [ ] Add complete level screen
 - [ ] Add game over screen
-- [ ] Texture player
+- [ ] Add title screen
+- [ ] Add sound effects
+
+
+## Assets
+
+|Asset Name|URL|
+|---|---|
+|Player Model (Rigged and animated with Mixamo)|https://free3d.com/3d-model/male-base-mesh-6682.html|
+|Player Texture|https://polyhaven.com/a/painted_plaster_wall|
+|Platform Texture|https://polyhaven.com/a/rocky_terrain_02|
+|Room Texture|https://polyhaven.com/a/painted_concrete|
+
