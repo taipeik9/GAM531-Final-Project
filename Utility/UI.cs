@@ -83,6 +83,33 @@ namespace GAMFinalProject
             GL.Enable(EnableCap.DepthTest);
         }
 
+        public void DrawTexture(Texture tex, Vector2 topLeft, Vector2 size, Shader shader, float scale = 1f, Vector2? tiling = null)
+        {
+            if (tex == null) return;
+            shader.Use();
+
+            GL.Disable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            var model = Matrix4.CreateScale(size.X * scale, size.Y * scale, 1f) *
+                        Matrix4.CreateTranslation(topLeft.X - (size.X * (scale - 1f) / 2f), topLeft.Y - (size.Y * (scale - 1f) / 2f), 0f);
+
+            shader.SetMatrix4("model", model);
+
+            Vector2 t = tiling ?? Vector2.One;
+            shader.SetVector2("tiling", t);
+
+            tex.Use(TextureUnit.Texture0);
+            shader.SetInt("tex", 0);
+            GL.BindVertexArray(_uiVao);
+            GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
+            GL.BindVertexArray(0);
+
+            GL.Disable(EnableCap.Blend);
+            GL.Enable(EnableCap.DepthTest);
+        }
+
         public void Dispose()
         {
             GL.DeleteBuffer(_uiVbo);

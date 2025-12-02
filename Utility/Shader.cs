@@ -152,6 +152,15 @@ namespace GAMFinalProject
             }
         }
 
+        public void SetVector2(string name, Vector2 data)
+        {
+            GL.UseProgram(Handle);
+            if (_uniformLocations.TryGetValue(name, out int location))
+            {
+                GL.Uniform2(location, data);
+            }
+        }
+
         public void SetMatrix4(string name, Matrix4 data)
         {
             GL.UseProgram(Handle);

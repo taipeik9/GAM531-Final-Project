@@ -8,8 +8,12 @@ namespace GAMFinalProject
 {
     internal class Game : GameWindow
     {
+        private enum GameState { Title, Playing, GameOver }
+        private GameState _state = GameState.Title;
         private Shader _shader;
         private Shader _uiShader;
+        private Screen _titleScreen;
+        private Screen _gameOverScreen;
         private UI _userInterface;
         private Camera _camera;
         private Texture _wall_texture;
@@ -72,6 +76,19 @@ namespace GAMFinalProject
 
             _userInterface = new UI(PlayerHealth);
 
+            Texture titleBgTexture = Texture.LoadFromFile("Asset/title-bg.jpg");
+            Texture titleTexture = Texture.LoadFromFile("Asset/title.png");
+            Texture startButtonTexture = Texture.LoadFromFile("Asset/start.png");
+            _titleScreen = new Screen(Size, _userInterface, titleBgTexture, titleTexture, startButtonTexture);
+
+            Texture gameOverBgTexture = Texture.LoadFromFile("Asset/game-over-bg.jpg");
+            Texture gameOverTexture = Texture.LoadFromFile("Asset/game-over.png");
+            Texture retryButtonTexture = Texture.LoadFromFile("Asset/retry.png");
+            _gameOverScreen = new Screen(Size, _userInterface, gameOverBgTexture, gameOverTexture, retryButtonTexture);
+
+            _state = GameState.Title;
+            CursorState = CursorState.Normal;
+
             SoundEngine.Init();
             SoundEngine.Load("footstep-1", "Asset/Sounds/footsteps/1.wav");
             SoundEngine.Load("footstep-2", "Asset/Sounds/footsteps/2.wav");
@@ -81,10 +98,6 @@ namespace GAMFinalProject
             SoundEngine.Load("damage", "Asset/Sounds/hurt.wav");
             SoundEngine.Load("break", "Asset/Sounds/bone-break.wav");
             SoundEngine.Load("music", "Asset/Sounds/background.wav");
-
-            SoundEngine.Play("music", true);
-
-            CursorState = CursorState.Grabbed;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -93,40 +106,55 @@ namespace GAMFinalProject
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            _shader.Use();
+            if (_state == GameState.Title)
+            {
+                _titleScreen.RenderFrame(_uiShader, Size);
+            }
+            else if (_state == GameState.GameOver)
+            {
+                _gameOverScreen.RenderFrame(_uiShader, Size);
+            }
+            else
+            {
+                if (!SoundEngine.IsPlaying("music"))
+                {
+                    SoundEngine.Play("music", true);
+                }
+                _shader.Use();
 
-            _camera.Update(new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
+                _camera.Update(new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
 
-            _camera.ConstrainToRoom(_room, 0.25f, new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
+                _camera.ConstrainToRoom(_room, 0.25f, new Vector3(_player.Position.X, _player.Position.Y + 0.25f, _player.Position.Z));
 
-            _shader.SetMatrix4("view", _camera.ViewMatrix);
-            _shader.SetMatrix4("projection", _camera.ProjectionMatrix);
+                _shader.SetMatrix4("view", _camera.ViewMatrix);
+                _shader.SetMatrix4("projection", _camera.ProjectionMatrix);
 
-            _shader.SetVector3("lightPos", new Vector3(0f, 7f, 0f));
-            _shader.SetVector3("lightColor", new Vector3(1f, 1f, 1f));
-            _shader.SetVector3("viewPos", _camera.Position);
-            _shader.SetFloat("shininess", 32f);
-            _shader.SetFloat("ambientStrength", 0.2f);
-            _shader.SetFloat("specularStrength", 0.5f);
+                _shader.SetVector3("lightPos", new Vector3(0f, 7f, 0f));
+                _shader.SetVector3("lightColor", new Vector3(1f, 1f, 1f));
+                _shader.SetVector3("viewPos", _camera.Position);
+                _shader.SetFloat("shininess", 32f);
+                _shader.SetFloat("ambientStrength", 0.2f);
+                _shader.SetFloat("specularStrength", 0.5f);
 
-            // Draw room
-            _wall_texture.Use(TextureUnit.Texture0);
-            _shader.SetInt("texToUse", 0);
-            _room.Draw(_shader);
+                // Draw room
+                _wall_texture.Use(TextureUnit.Texture0);
+                _shader.SetInt("texToUse", 0);
+                _room.Draw(_shader);
 
-            // Draw platforms
-            _platform_texture.Use(TextureUnit.Texture2);
-            _shader.SetInt("texToUse", 2);
-            _platformManager.Draw(_shader);
+                // Draw platforms
+                _platform_texture.Use(TextureUnit.Texture2);
+                _shader.SetInt("texToUse", 2);
+                _platformManager.Draw(_shader);
 
-            // Draw player
-            _player_texture.Use(TextureUnit.Texture1);
-            _shader.SetInt("texToUse", 1);
-            _player.Draw(_shader);
+                // Draw player
+                _player_texture.Use(TextureUnit.Texture1);
+                _shader.SetInt("texToUse", 1);
+                _player.Draw(_shader);
 
-            _uiShader.Use();
-            _userInterface.Draw(Size, _uiShader, _player.Health);
+                _uiShader.Use();
+                _userInterface.Draw(Size, _uiShader, _player.Health);
 
+            }
             SwapBuffers();
         }
 
@@ -134,28 +162,58 @@ namespace GAMFinalProject
         {
             base.OnUpdateFrame(e);
 
-            _platformManager.Update(e.Time);
-
             if (!IsFocused) return;
 
             var input = KeyboardState;
-
             if (input.IsKeyDown(Keys.Escape)) Close();
 
-            _player.Update((float)e.Time, input, _platformManager, _camera, _room);
+            if (_player.Health <= 0)
+            {
+                _state = GameState.GameOver;
+                CursorState = CursorState.Normal;
+            }
 
-            float mouseDX = MouseState.Delta.X;
-            float mouseDY = MouseState.Delta.Y;
+            if (_state == GameState.Title)
+            {
+                if (_titleScreen.CheckButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    // start game
+                    _state = GameState.Playing;
+                    CursorState = CursorState.Grabbed;
+                }
+            }
+            else if (_state == GameState.GameOver)
+            {
+                if (_gameOverScreen.CheckButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    // restart game
+                    _player.Reset(PlayerHealth);
+                    _player.Position = new Vector3(0f, 0.0f, 4.0f);
+                    _player.Scale = new Vector3(2f, 2f, 2f);
+                    _player.Rotation = new Vector3(-90f, 180f, 0f);
+                    _state = GameState.Playing;
+                    CursorState = CursorState.Grabbed;
+                }
+            }
+            else
+            {
+                _platformManager.Update(e.Time);
 
-            float sensitivity = 0.01f;
+                _player.Update((float)e.Time, input, _platformManager, _camera, _room);
 
-            _camera.Yaw += mouseDX * sensitivity;
-            _camera.Pitch -= mouseDY * sensitivity;
+                float mouseDX = MouseState.Delta.X;
+                float mouseDY = MouseState.Delta.Y;
 
-            _camera.Pitch = Math.Clamp(_camera.Pitch, -1.2f, 0.7f);
+                float sensitivity = 0.01f;
 
-            _camera.Update(_player.Position);
-            _camera.ConstrainToRoom(_room, 0.25f, _player.Position);
+                _camera.Yaw += mouseDX * sensitivity;
+                _camera.Pitch -= mouseDY * sensitivity;
+
+                _camera.Pitch = Math.Clamp(_camera.Pitch, -1.2f, 0.7f);
+
+                _camera.Update(_player.Position);
+                _camera.ConstrainToRoom(_room, 0.25f, _player.Position);
+            }
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
@@ -185,6 +243,7 @@ namespace GAMFinalProject
             base.OnResize(e);
             GL.Viewport(0, 0, Size.X, Size.Y);
             _camera.AspectRatio = Size.X / (float)Size.Y;
+            _titleScreen.Resize(Size);
         }
 
         protected override void OnUnload()
@@ -195,6 +254,7 @@ namespace GAMFinalProject
             _shader.Unload();
             _uiShader.Unload();
             _userInterface.Dispose();
+            _titleScreen.Dispose();
             _player?.Dispose();
             _platformManager?.Dispose();
             _room?.Dispose();

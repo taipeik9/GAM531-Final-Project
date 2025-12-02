@@ -303,6 +303,15 @@ namespace GAMFinalProject
             shader.SetMatrix4("model", _modelMatrix);
             _model.Draw();
         }
+        public void Reset(int health)
+        {
+            IsGrounded = true;
+            IsSprinting = false;
+            Health = health;
+            _initialFallHeight = null;
+            Velocity = Vector3.Zero;
+            _playerYaw = 180f;
+        }
         public void Dispose()
         {
             _model.Dispose();
