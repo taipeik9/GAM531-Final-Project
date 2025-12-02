@@ -9,6 +9,8 @@ namespace GAMFinalProject
     internal class Game : GameWindow
     {
         private Shader _shader;
+        private Shader _uiShader;
+        private UI _userInterface;
         private Camera _camera;
         private Texture _wall_texture;
         private Texture _player_texture;
@@ -16,7 +18,7 @@ namespace GAMFinalProject
         private Player _player;
         private PlatformManager _platformManager;
         private readonly Room _room = new Room();
-
+        private const int PlayerHealth = 3;
         private const float Gravity = -18f;
         public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
             : base(gameWindowSettings, nativeWindowSettings)
@@ -53,16 +55,34 @@ namespace GAMFinalProject
             playerModel.SetUvMode(0, new Vector2(1f, 1f));
             playerModel.PlayAnimation("idle");
 
-            _player = new Player(playerModel, Gravity);
+            _player = new Player(playerModel, Gravity, PlayerHealth);
             _player.Position = new Vector3(0f, 0.0f, 4.0f);
             _player.Scale = new Vector3(2f, 2f, 2f);
-            _player.Rotation = new Vector3(-90f, _player.GetYaw(), 0f);
+            _player.Rotation = new Vector3(-90f, 180f, 0f);
             _player.GroundLevel = 0.0f;
 
             _platformManager = new PlatformManager();
             _platformManager.SetupParkourCourse();
 
-            _camera = new Camera(3f, Size.X / (float)Size.Y);
+            _camera = new Camera(Size.X / (float)Size.Y);
+
+            _uiShader = new Shader("Shader/ui-vert.glsl", "Shader/ui-frag.glsl");
+            _uiShader.Use();
+            _uiShader.SetInt("tex", 0);
+
+            _userInterface = new UI(PlayerHealth);
+
+            SoundEngine.Init();
+            SoundEngine.Load("footstep-1", "Asset/Sounds/footsteps/1.wav");
+            SoundEngine.Load("footstep-2", "Asset/Sounds/footsteps/2.wav");
+            SoundEngine.Load("footstep-3", "Asset/Sounds/footsteps/3.wav");
+            SoundEngine.Load("footstep-4", "Asset/Sounds/footsteps/4.wav");
+            SoundEngine.Load("footstep-5", "Asset/Sounds/footsteps/5.wav");
+            SoundEngine.Load("damage", "Asset/Sounds/hurt.wav");
+            SoundEngine.Load("break", "Asset/Sounds/bone-break.wav");
+            SoundEngine.Load("music", "Asset/Sounds/background.wav");
+
+            SoundEngine.Play("music", true);
 
             CursorState = CursorState.Grabbed;
         }
@@ -104,12 +124,16 @@ namespace GAMFinalProject
             _shader.SetInt("texToUse", 1);
             _player.Draw(_shader);
 
+            _uiShader.Use();
+            _userInterface.Draw(Size, _uiShader, _player.Health);
+
             SwapBuffers();
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
+
             _platformManager.Update(e.Time);
 
             if (!IsFocused) return;
@@ -169,6 +193,8 @@ namespace GAMFinalProject
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
             GL.BindVertexArray(0);
             _shader.Unload();
+            _uiShader.Unload();
+            _userInterface.Dispose();
             _player?.Dispose();
             _platformManager?.Dispose();
             _room?.Dispose();

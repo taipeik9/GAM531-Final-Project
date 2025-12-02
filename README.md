@@ -13,11 +13,13 @@ GAM531 Final Project Group 2
 - [x] Add wall collision
 - [x] Add lighting
 - [x] Texture player
-- [ ] Add UI and Health + fall damage
+- [x] Add UI and Health + fall damage
+- [x] Add sound effects & music
 - [ ] Add complete level screen
+  - [ ] add finish level larger platform
+  - [ ] add npc at the top
 - [ ] Add game over screen
 - [ ] Add title screen
-- [ ] Add sound effects
 
 
 ## Assets
@@ -28,4 +30,7 @@ GAM531 Final Project Group 2
 |Player Texture|https://polyhaven.com/a/painted_plaster_wall|
 |Platform Texture|https://polyhaven.com/a/rocky_terrain_02|
 |Room Texture|https://polyhaven.com/a/painted_concrete|
-
+|Heart|https://opengameart.org/content/heart-pixel-art|
+|Footstep Sound|https://pixabay.com/sound-effects/concrete-footsteps-6752/|
+|Music|https://pixabay.com/music/modern-classical-piano-waltz-elegant-and-graceful-instrumental-music-285601/|
+|Hurt Sound|https://pixabay.com/sound-effects/male-hurt7-48124/|

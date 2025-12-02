@@ -6,16 +6,15 @@ namespace GAMFinalProject
     {
         public float Yaw = 0f;
         public float Pitch = 0f;
-        public float Distance = 3f;
+        public float Distance = 2.25f;
         public float AspectRatio;
 
         public Vector3 Position { get; private set; }
         public Matrix4 ViewMatrix { get; private set; }
         public Matrix4 ProjectionMatrix { get; private set; }
 
-        public Camera(float distance, float aspectRatio)
+        public Camera(float aspectRatio)
         {
-            Distance = distance;
             AspectRatio = aspectRatio;
         }
         public void Update(Vector3 playerPos)

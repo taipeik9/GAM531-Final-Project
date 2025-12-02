@@ -19,16 +19,24 @@ namespace GAMFinalProject
         public float GroundLevel { get; set; } = 0.5f;
 
         // physics constants
-        private const float JumpForce = 7.5f;
+        private const float JumpForce = 7.0f;
         private const float Radius = 0.35f;
         private const float WalkSpeed = 2.0f;
         private const float SprintSpeed = 3.5f;
         private readonly float Gravity;
+        // properties for damage
+        private float? _initialFallHeight = null;
+        public int Health { get; private set; }
+        // attributes for footstep audio
+        private const double FootStepTimerStart = 0.24f;
+        private double _footstepTimer = FootStepTimerStart;
+        private Random _footstepRand = new Random();
 
-        public Player(AnimatedModel model, float gravity)
+        public Player(AnimatedModel model, float gravity, int health)
         {
             _model = model;
             Gravity = gravity;
+            Health = health;
         }
 
         public void Update(float dt, KeyboardState input, PlatformManager platformManager, Camera camera, Room room)
@@ -235,13 +243,52 @@ namespace GAMFinalProject
 
             // Apply Rotation
             Rotation = new Vector3(-90f, _playerYaw, 0f);
-        }
 
-        public float GetYaw()
+            // check if player should take damage
+            CheckFallHeight();
+            UpdateFootsteps(isMoving, dt);
+        }
+        private void UpdateFootsteps(bool isMoving, float deltaTime)
         {
-            return _playerYaw;
+            if (!isMoving || !IsGrounded)
+            {
+                _footstepTimer = FootStepTimerStart;
+                return;
+            }
+
+            double interval = IsSprinting ? FootStepTimerStart - 0.01 : 0.35;
+
+            _footstepTimer += deltaTime;
+
+            if (_footstepTimer >= interval)
+            {
+                _footstepTimer = 0;
+                SoundEngine.PlayRandomFootstep(_footstepRand);
+            }
         }
 
+        private void CheckFallHeight()
+        {
+            if (!IsGrounded)
+            {
+                if (_initialFallHeight == null || Position.Y > _initialFallHeight)
+                    _initialFallHeight = Position.Y;
+            }
+            else
+            {
+                if (_initialFallHeight - Position.Y >= 2.0f)
+                {
+                    TakeDamage();
+                }
+                _initialFallHeight = null;
+            }
+        }
+        private void TakeDamage()
+        {
+            Health -= 1;
+            SoundEngine.Play("break");
+            SoundEngine.Play("damage");
+        }
         public void Draw(Shader shader)
         {
             var scaleMatrix = Matrix4.CreateScale(Scale);
@@ -256,7 +303,6 @@ namespace GAMFinalProject
             shader.SetMatrix4("model", _modelMatrix);
             _model.Draw();
         }
-
         public void Dispose()
         {
             _model.Dispose();
