@@ -244,6 +244,7 @@ namespace GAMFinalProject
             GL.Viewport(0, 0, Size.X, Size.Y);
             _camera.AspectRatio = Size.X / (float)Size.Y;
             _titleScreen.Resize(Size);
+            _gameOverScreen.Resize(Size);
         }
 
         protected override void OnUnload()
