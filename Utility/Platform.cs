@@ -24,6 +24,7 @@ namespace GAMFinalProject
         public float Width { get; set; } = 2.0f;   // X dimension
         public float Height { get; set; } = 0.3f;  // Y dimension
         public float Depth { get; set; } = 2.0f;   // Z dimension
+        public float ScaleModifier = 1.0f; // updates model to adjust with collision size
 
         public PlatformType Type { get; set; } = PlatformType.Static;
 
@@ -82,14 +83,14 @@ namespace GAMFinalProject
 
         private void UpdateModelMatrix()
         {
-            var scale = Matrix4.CreateScale(VisualScale);
             var rotX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-90f)); // Fix model orientation
+            var scale = Matrix4.CreateScale(VisualScale.X * ScaleModifier, VisualScale.Y, VisualScale.Z * ScaleModifier);
             var userRot = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(Rotation.X)) *
                           Matrix4.CreateRotationY(MathHelper.DegreesToRadians(Rotation.Y)) *
                           Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(Rotation.Z));
             var translation = Matrix4.CreateTranslation(Position);
 
-            ModelMatrix = scale * rotX * userRot * translation;
+            ModelMatrix = rotX * scale * userRot * translation;
         }
 
         public float GetSurfaceY()

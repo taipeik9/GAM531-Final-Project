@@ -31,12 +31,6 @@ namespace GAMFinalProject
                      - dir * Distance
                      + Vector3.UnitY;
 
-            // stop camera from ground clipping
-            if (position.Y <= 0.1f)
-            {
-                position.Y = 0.1f;
-            }
-
             ViewMatrix = Matrix4.LookAt(position, playerPos, Vector3.UnitY);
             Position = position;
 
