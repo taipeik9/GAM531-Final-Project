@@ -8,12 +8,14 @@ namespace GAMFinalProject
 {
     internal class Game : GameWindow
     {
-        private enum GameState { Title, Playing, GameOver }
+        private enum GameState { Title, Playing, GameOver, Paused }
         private GameState _state = GameState.Title;
+        private int _currentCheckPoint = 1;
         private Shader _shader;
         private Shader _uiShader;
         private Screen _titleScreen;
         private Screen _gameOverScreen;
+        private Screen _pauseScreen;
         private UI _userInterface;
         private Camera _camera;
         private Texture _wall_texture;
@@ -85,7 +87,12 @@ namespace GAMFinalProject
             Texture gameOverBgTexture = Texture.LoadFromFile("Asset/game-over-bg.jpg");
             Texture gameOverTexture = Texture.LoadFromFile("Asset/game-over.png");
             Texture retryButtonTexture = Texture.LoadFromFile("Asset/retry.png");
-            _gameOverScreen = new Screen(Size, _userInterface, gameOverBgTexture, gameOverTexture, retryButtonTexture);
+            Texture quitButtonTexture = Texture.LoadFromFile("Asset/quit-game.png");
+            _gameOverScreen = new Screen(Size, _userInterface, gameOverBgTexture, gameOverTexture, retryButtonTexture, quitButtonTexture);
+
+            Texture pauseTexture = Texture.LoadFromFile("Asset/paused.png");
+            Texture resumeButtonTexture = Texture.LoadFromFile("Asset/resume.png");
+            _pauseScreen = new Screen(Size, _userInterface, titleBgTexture, pauseTexture, resumeButtonTexture, quitButtonTexture);
 
             _state = GameState.Title;
             CursorState = CursorState.Normal;
@@ -114,6 +121,10 @@ namespace GAMFinalProject
             else if (_state == GameState.GameOver)
             {
                 _gameOverScreen.RenderFrame(_uiShader, Size);
+            }
+            else if (_state == GameState.Paused)
+            {
+                _pauseScreen.RenderFrame(_uiShader, Size);
             }
             else
             {
@@ -173,7 +184,11 @@ namespace GAMFinalProject
             if (!IsFocused) return;
 
             var input = KeyboardState;
-            if (input.IsKeyDown(Keys.Escape)) Close();
+            if (input.IsKeyDown(Keys.Escape))
+            {
+                _state = GameState.Paused;
+                CursorState = CursorState.Normal;
+            }
 
             if (_player.Health <= 0)
             {
@@ -183,7 +198,7 @@ namespace GAMFinalProject
 
             if (_state == GameState.Title)
             {
-                if (_titleScreen.CheckButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                if (_titleScreen.CheckMainButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
                 {
                     // start game
                     _state = GameState.Playing;
@@ -192,7 +207,7 @@ namespace GAMFinalProject
             }
             else if (_state == GameState.GameOver)
             {
-                if (_gameOverScreen.CheckButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                if (_gameOverScreen.CheckMainButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
                 {
                     // restart game
                     _player.Reset(PlayerHealth);
@@ -201,6 +216,23 @@ namespace GAMFinalProject
                     _player.Rotation = new Vector3(-90f, 180f, 0f);
                     _state = GameState.Playing;
                     CursorState = CursorState.Grabbed;
+                }
+                else if (_gameOverScreen.CheckSecondaryButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    Close();
+                }
+            }
+            else if (_state == GameState.Paused)
+            {
+                if (_pauseScreen.CheckMainButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    // resume game
+                    _state = GameState.Playing;
+                    CursorState = CursorState.Grabbed;
+                }
+                else if (_pauseScreen.CheckSecondaryButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    Close();
                 }
             }
             else
@@ -253,6 +285,7 @@ namespace GAMFinalProject
             _camera.AspectRatio = Size.X / (float)Size.Y;
             _titleScreen.Resize(Size);
             _gameOverScreen.Resize(Size);
+            _pauseScreen.Resize(Size);
         }
 
         protected override void OnUnload()

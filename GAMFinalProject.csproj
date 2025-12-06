@@ -39,6 +39,15 @@
     <None Update="Asset\game-over-bg.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Asset\paused.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Asset\resume.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Asset\quit-game.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Asset\concrete.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
