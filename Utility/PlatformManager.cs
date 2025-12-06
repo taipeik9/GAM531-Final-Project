@@ -242,6 +242,11 @@ namespace GAMFinalProject
             _isGameComplete = false;
         }
 
+        public void SetCurrentCheckPoint(int checkpoint)
+        {
+            _currentCheckpoint = checkpoint;
+        }
+
         public bool CheckWallCollision(Vector3 fromPos, Vector3 toPos, float playerRadius)
         {
             foreach (var platform in _platforms)

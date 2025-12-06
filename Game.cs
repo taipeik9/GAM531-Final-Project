@@ -299,6 +299,7 @@ namespace GAMFinalProject
             _player.Rotation = new Vector3(-90f, 180f, 0f);
             _playerLives = 3;
             _respawnPoint = PlayerStartPosition;
+            _platformManager.SetCurrentCheckPoint(0);
             _state = GameState.Playing;
             CursorState = CursorState.Grabbed;
         }
