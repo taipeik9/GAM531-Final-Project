@@ -9,6 +9,8 @@ out vec4 FragColor;
 uniform sampler2D texture0;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
 uniform int texToUse = 0; // 0 = wall, 1 = player, 2 = platform
 
 // phong lighting parameters
@@ -44,6 +46,14 @@ void main()
     else if (texToUse == 2)
     {
         baseColor = texture(texture2, TexCoord).rgb;
+    }
+    else if (texToUse == 3)
+    {
+        baseColor = texture(texture3, TexCoord).rgb;
+    }
+    else if (texToUse == 4)
+    {
+        baseColor = texture(texture4, TexCoord).rgb;
     }
 
     vec3 norm = normalize(Normal);

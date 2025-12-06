@@ -5,7 +5,9 @@ namespace GAMFinalProject
     public enum PlatformType
     {
         Static,
-        Moving
+        Moving,
+        CheckPoint,
+        Final
     }
 
     public class Platform : IDisposable
@@ -33,6 +35,7 @@ namespace GAMFinalProject
         public Vector3 EndPosition { get; set; }
         public float MoveSpeed { get; set; } = 1.0f;
         private float _moveProgress = 0f;
+        public int CheckpointNumber;
 
         public Matrix4 ModelMatrix { get; private set; } = Matrix4.Identity;
 

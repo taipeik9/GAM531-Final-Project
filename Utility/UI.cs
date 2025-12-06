@@ -7,17 +7,27 @@ namespace GAMFinalProject
     {
         private readonly Texture _heartTexture;
         private readonly Texture _heartFadedTexture;
+
+        private readonly Texture _lives1Texture;
+        private readonly Texture _lives2Texture;
+        private readonly Texture _lives3Texture;
+
         private readonly int _uiVao;
         private readonly int _uiVbo;
         private readonly int _uiEbo;
         private const int HeartSize = 48; // pixels
         private const int HeartMargin = 10; // pixels from screen edge
         private readonly int MaxHearts;
-
+        private const int LivesHeight = 50;
+        private const int LivesWidth = 150;
+        private const int LivesMargin = 30; // pixels from screen edge
         public UI(int maxHearts)
         {
             _heartTexture = Texture.LoadFromFile("Asset/heart.png");
             _heartFadedTexture = Texture.LoadFromFile("Asset/heart-faded.png");
+            _lives1Texture = Texture.LoadFromFile("Asset/lives/1.png");
+            _lives2Texture = Texture.LoadFromFile("Asset/lives/2.png");
+            _lives3Texture = Texture.LoadFromFile("Asset/lives/3.png");
 
             float[] quad = [
                 0f, 0f, 0f, 1f,
@@ -48,7 +58,7 @@ namespace GAMFinalProject
 
             MaxHearts = maxHearts;
         }
-        public void Draw(Vector2 ClientSize, Shader shader, int currentHealth)
+        public void Draw(Vector2 ClientSize, Shader shader, int currentHealth, int currentLives)
         {
             GL.Disable(EnableCap.DepthTest);
             GL.Enable(EnableCap.Blend);
@@ -79,6 +89,25 @@ namespace GAMFinalProject
             }
 
             GL.BindVertexArray(0);
+
+            if (currentLives > 0)
+            {
+                int sel = Math.Clamp(currentLives, 1, 3);
+                Texture livesTex = sel switch
+                {
+                    1 => _lives1Texture,
+                    2 => _lives2Texture,
+                    _ => _lives3Texture,
+                };
+
+                if (livesTex != null)
+                {
+                    var topLeft = new Vector2(LivesMargin, LivesMargin);
+                    var size = new Vector2(LivesWidth, LivesHeight);
+                    DrawTexture(livesTex, topLeft, size, shader, scale: 1f, tiling: null);
+                }
+            }
+
             GL.Disable(EnableCap.Blend);
             GL.Enable(EnableCap.DepthTest);
         }

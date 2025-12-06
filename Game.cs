@@ -8,24 +8,27 @@ namespace GAMFinalProject
 {
     internal class Game : GameWindow
     {
-        private enum GameState { Title, Playing, GameOver, Paused }
+        private enum GameState { Title, Playing, GameOver, Paused, Win }
         private GameState _state = GameState.Title;
-        private int _currentCheckPoint = 1;
         private Shader _shader;
         private Shader _uiShader;
         private Screen _titleScreen;
         private Screen _gameOverScreen;
         private Screen _pauseScreen;
+        private Screen _gameEndScreen;
         private UI _userInterface;
         private Camera _camera;
         private Texture _wall_texture;
         private Texture _player_texture;
-        private Texture _platform_texture;
         private Player _player;
+        // private readonly Vector3 PlayerStartPosition = new Vector3(0f, 0.0f, 4.0f);
+        private readonly Vector3 PlayerStartPosition = new Vector3(-5.0f, 5.6f, -0.5f);
         private PlatformManager _platformManager;
         private readonly Room _room = new Room();
         private const float LightHeight = 6.0f;
         private const int PlayerHealth = 3;
+        private int _playerLives = 3;
+        private Vector3 _respawnPoint;
         private const float Gravity = -18f;
         public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
             : base(gameWindowSettings, nativeWindowSettings)
@@ -46,11 +49,15 @@ namespace GAMFinalProject
 
             _wall_texture = Texture.LoadFromFile("Asset/painted-concrete.jpg");
             _player_texture = Texture.LoadFromFile("Asset/concrete.jpg");
-            _platform_texture = Texture.LoadFromFile("Asset/concrete-dark.jpg");
+            Texture platformTexture = Texture.LoadFromFile("Asset/concrete-dark.jpg");
+            Texture platformCheckpointTexture = Texture.LoadFromFile("Asset/checkpoint.jpg");
+            Texture platformFinalTexture = Texture.LoadFromFile("Asset/final.jpg");
 
             _shader.SetInt("texture0", 0);
             _shader.SetInt("texture1", 1);
             _shader.SetInt("texture2", 2);
+            _shader.SetInt("texture3", 3);
+            _shader.SetInt("texture4", 4);
 
             _room.Load();
 
@@ -63,12 +70,12 @@ namespace GAMFinalProject
             playerModel.PlayAnimation("idle");
 
             _player = new Player(playerModel, Gravity, PlayerHealth);
-            _player.Position = new Vector3(0f, 0.0f, 4.0f);
+            _player.Position = PlayerStartPosition;
             _player.Scale = new Vector3(2f, 2f, 2f);
             _player.Rotation = new Vector3(-90f, 180f, 0f);
             _player.GroundLevel = 0.0f;
 
-            _platformManager = new PlatformManager();
+            _platformManager = new PlatformManager(platformTexture, platformCheckpointTexture, platformFinalTexture, PlayerStartPosition);
             _platformManager.SetupParkourCourse();
 
             _camera = new Camera(Size.X / (float)Size.Y);
@@ -93,6 +100,9 @@ namespace GAMFinalProject
             Texture pauseTexture = Texture.LoadFromFile("Asset/paused.png");
             Texture resumeButtonTexture = Texture.LoadFromFile("Asset/resume.png");
             _pauseScreen = new Screen(Size, _userInterface, titleBgTexture, pauseTexture, resumeButtonTexture, quitButtonTexture);
+
+            Texture youWinTexture = Texture.LoadFromFile("Asset/you-win.png");
+            _gameEndScreen = new Screen(Size, _userInterface, titleBgTexture, youWinTexture, retryButtonTexture, quitButtonTexture);
 
             _state = GameState.Title;
             CursorState = CursorState.Normal;
@@ -125,6 +135,10 @@ namespace GAMFinalProject
             else if (_state == GameState.Paused)
             {
                 _pauseScreen.RenderFrame(_uiShader, Size);
+            }
+            else if (_state == GameState.Win)
+            {
+                _gameEndScreen.RenderFrame(_uiShader, Size);
             }
             else
             {
@@ -161,8 +175,6 @@ namespace GAMFinalProject
                 _room.Draw(_shader);
 
                 // Draw platforms
-                _platform_texture.Use(TextureUnit.Texture2);
-                _shader.SetInt("texToUse", 2);
                 _platformManager.Draw(_shader);
 
                 // Draw player
@@ -171,7 +183,7 @@ namespace GAMFinalProject
                 _player.Draw(_shader);
 
                 _uiShader.Use();
-                _userInterface.Draw(Size, _uiShader, _player.Health);
+                _userInterface.Draw(Size, _uiShader, _player.Health, _playerLives);
 
             }
             SwapBuffers();
@@ -190,9 +202,24 @@ namespace GAMFinalProject
                 CursorState = CursorState.Normal;
             }
 
+            _respawnPoint = _platformManager.GetCurrentCheckpointPosition();
+
             if (_player.Health <= 0)
             {
+                _playerLives -= 1;
+                _player.Reset(PlayerHealth);
+                _player.Position = _respawnPoint;
+            }
+
+            if (_playerLives <= 0)
+            {
                 _state = GameState.GameOver;
+                CursorState = CursorState.Normal;
+            }
+
+            if (_platformManager.CheckGameComplete())
+            {
+                _state = GameState.Win;
                 CursorState = CursorState.Normal;
             }
 
@@ -210,12 +237,7 @@ namespace GAMFinalProject
                 if (_gameOverScreen.CheckMainButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
                 {
                     // restart game
-                    _player.Reset(PlayerHealth);
-                    _player.Position = new Vector3(0f, 0.0f, 4.0f);
-                    _player.Scale = new Vector3(2f, 2f, 2f);
-                    _player.Rotation = new Vector3(-90f, 180f, 0f);
-                    _state = GameState.Playing;
-                    CursorState = CursorState.Grabbed;
+                    ResetGame();
                 }
                 else if (_gameOverScreen.CheckSecondaryButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
                 {
@@ -231,6 +253,20 @@ namespace GAMFinalProject
                     CursorState = CursorState.Grabbed;
                 }
                 else if (_pauseScreen.CheckSecondaryButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    Close();
+                }
+            }
+            if (_state == GameState.Win)
+            {
+                if (_gameEndScreen.CheckMainButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
+                {
+                    // restart game
+                    ResetGame();
+                    _state = GameState.Playing;
+                    _platformManager.SetGameRestart();
+                }
+                else if (_gameEndScreen.CheckSecondaryButtonClick(MouseState.Position, MouseState.IsButtonDown(MouseButton.Left)))
                 {
                     Close();
                 }
@@ -254,6 +290,18 @@ namespace GAMFinalProject
                 _camera.Update(_player.Position);
                 _camera.ConstrainToRoom(_room, 0.25f, _player.Position);
             }
+        }
+
+        private void ResetGame()
+        {
+            _player.Reset(PlayerHealth);
+            _player.Position = PlayerStartPosition;
+            _player.Scale = new Vector3(2f, 2f, 2f);
+            _player.Rotation = new Vector3(-90f, 180f, 0f);
+            _playerLives = 3;
+            _respawnPoint = PlayerStartPosition;
+            _state = GameState.Playing;
+            CursorState = CursorState.Grabbed;
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
@@ -285,6 +333,7 @@ namespace GAMFinalProject
             _camera.AspectRatio = Size.X / (float)Size.Y;
             _titleScreen.Resize(Size);
             _gameOverScreen.Resize(Size);
+            _gameEndScreen.Resize(Size);
             _pauseScreen.Resize(Size);
         }
 

@@ -1,6 +1,12 @@
 # GAM531-Final-Project
 GAM531 Final Project Group 2
 
+## Some Notes
+
+You must have OpenAL installed to run for the sound engine. Controls: WASD for movement, mouse for looking around, Left shift for sprinting.
+
+The gold platforms are checkpoints!
+
 ### TODO
 
 - [x] edit model so it doesn't move forward
@@ -20,12 +26,11 @@ GAM531 Final Project Group 2
 - [x] Add game over screen
 - [x] Add title screen
 
-- [ ] pause menu
-- [ ] new models + textures
-- [ ] checkpoint system
-  - [ ] special checkpoint platforms
-  - [ ] Life count, reset on 3 deaths
-- [ ] level complete screen
+- [x] pause menu
+- [x] checkpoint system
+  - [x] special checkpoint platforms
+  - [x] Life count, reset on 3 deaths
+- [x] level complete screen
 
 
 ## Assets
@@ -43,3 +48,5 @@ GAM531 Final Project Group 2
 |Title Screen BG|https://polyhaven.com/a/painted_plaster_wall|
 |All Text|https://cooltext.com/|
 |Game Over Screen BG|https://polyhaven.com/a/rebar_reinforced_concrete|
+|Checkpoint Platform|https://polyhaven.com/a/rusty_metal_03|
+|Final Platform|https://polyhaven.com/a/rusty_painted_metal|
