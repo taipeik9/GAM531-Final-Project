@@ -1,11 +1,18 @@
 # GAM531-Final-Project
 GAM531 Final Project Group 2
 
+## Game Controls
+
+- WASD - Movement
+- Mouse - Look around
+- Shift - Run
+- Space - Jump
+
 ## Some Notes
 
 You must have OpenAL installed to run for the sound engine. Controls: WASD for movement, mouse for looking around, Left shift for sprinting.
 
-The gold platforms are checkpoints!
+*The gold platforms are checkpoints!*
 
 ### TODO
 
