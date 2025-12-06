@@ -22,6 +22,7 @@ namespace GAMFinalProject
         private Player _player;
         private PlatformManager _platformManager;
         private readonly Room _room = new Room();
+        private const float LightHeight = 6.0f;
         private const int PlayerHealth = 3;
         private const float Gravity = -18f;
         public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
@@ -129,12 +130,19 @@ namespace GAMFinalProject
                 _shader.SetMatrix4("view", _camera.ViewMatrix);
                 _shader.SetMatrix4("projection", _camera.ProjectionMatrix);
 
-                _shader.SetVector3("lightPos", new Vector3(0f, 7f, 0f));
+                // _shader.SetVector3("lightPos", _player.Position + new Vector3(0f, LightHeight, 0f)); // our light is gonna stay above the player and follow them
+                _shader.SetVector3("lightPos", _player.Position + new Vector3(0f, LightHeight, 0f)); // our light follows
                 _shader.SetVector3("lightColor", new Vector3(1f, 1f, 1f));
                 _shader.SetVector3("viewPos", _camera.Position);
                 _shader.SetFloat("shininess", 32f);
                 _shader.SetFloat("ambientStrength", 0.2f);
                 _shader.SetFloat("specularStrength", 0.5f);
+
+                // spotlight points downward
+                _shader.SetVector3("lightDir", new Vector3(0, -1, 0));
+                _shader.SetFloat("spotlightIntensity", 2.0f); // modifier for the spotlight intensity
+                _shader.SetFloat("innerCutoff", MathF.Cos(MathHelper.DegreesToRadians(50f)));
+                _shader.SetFloat("outerCutoff", MathF.Cos(MathHelper.DegreesToRadians(90f)));
 
                 // Draw room
                 _wall_texture.Use(TextureUnit.Texture0);

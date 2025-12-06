@@ -17,9 +17,15 @@ GAM531 Final Project Group 2
 - [x] Add sound effects & music
 - [ ] Add complete level screen
   - [ ] add finish level larger platform
-  - [ ] add npc at the top
 - [x] Add game over screen
 - [x] Add title screen
+
+- [ ] pause menu
+- [ ] new models + textures
+- [ ] checkpoint system
+  - [ ] special checkpoint platforms
+  - [ ] Life count, reset on 3 deaths
+- [ ] level complete screen
 
 
 ## Assets

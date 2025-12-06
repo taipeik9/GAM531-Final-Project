@@ -15,6 +15,21 @@ uniform int texToUse = 0; // 0 = wall, 1 = player, 2 = platform
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
+
+uniform float spotlightIntensity;
+
+// spotlight direction
+uniform vec3 lightDir;
+
+// spotlight soft edge
+uniform float innerCutoff;  // cos(inner angle)
+uniform float outerCutoff;  // cos(outer angle)
+
+// attenuation (distance falloff)
+uniform float constant = 1.0;
+uniform float linear = 0.05;
+uniform float quadratic = 0.01;
+
 uniform float shininess = 32.0;
 uniform float ambientStrength = 0.15;
 uniform float specularStrength = 0.5;
@@ -31,19 +46,34 @@ void main()
         baseColor = texture(texture2, TexCoord).rgb;
     }
 
-    // normal and light calculations
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
 
-    vec3 ambient = ambientStrength * lightColor;
+    // direction and distance
+    vec3 L = normalize(lightPos - FragPos);
+    float distance = length(lightPos - FragPos);
 
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+    // attenuation
+    float attenuation = 
+        1.0 / (constant + linear * distance + quadratic * distance * distance);
 
+    // spotlight intensity
+    float theta = dot(L, normalize(-lightDir));
+    float epsilon = innerCutoff - outerCutoff;
+    float intensity = clamp((theta - outerCutoff) / epsilon, 0.0, 1.0);
+    intensity *= spotlightIntensity;
+
+    // ambient (slightly affected by attenuation)
+    vec3 ambient = ambientStrength * lightColor * attenuation;
+
+    // diffuse
+    float diff = max(dot(norm, L), 0.0);
+    vec3 diffuse = diff * lightColor * intensity * attenuation;
+
+    // specular
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 reflectDir = reflect(-L, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-    vec3 specular = specularStrength * spec * lightColor;
+    vec3 specular = specularStrength * spec * lightColor * intensity * attenuation;
 
     vec3 lighting = ambient + diffuse + specular;
 
