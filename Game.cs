@@ -21,8 +21,7 @@ namespace GAMFinalProject
         private Texture _wall_texture;
         private Texture _player_texture;
         private Player _player;
-        // private readonly Vector3 PlayerStartPosition = new Vector3(0f, 0.0f, 4.0f);
-        private readonly Vector3 PlayerStartPosition = new Vector3(-5.0f, 5.6f, -0.5f);
+        private readonly Vector3 PlayerStartPosition = new Vector3(0f, 0.0f, 4.0f);
         private PlatformManager _platformManager;
         private readonly Room _room = new Room();
         private const float LightHeight = 6.0f;
