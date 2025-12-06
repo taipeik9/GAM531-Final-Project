@@ -10,7 +10,7 @@ GAM531 Final Project Group 2
 
 ## Some Notes
 
-You must have OpenAL installed to run for the sound engine. Controls: WASD for movement, mouse for looking around, Left shift for sprinting.
+You must have OpenAL installed to run for the sound engine. It is included in the NuGet package manager but you may have to download it here: https://www.openal.org/downloads/ Controls: WASD for movement, mouse for looking around, Left shift for sprinting.
 
 *The gold platforms are checkpoints!*
 
